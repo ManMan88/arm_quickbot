@@ -1,2 +1,4 @@
-int64 encoderLeft
-int64 encoderRight
+int64 encoderLeftCount
+int64 encoderRightCount
+float64 encoderLeftRate
+float64 encoderRightRate
