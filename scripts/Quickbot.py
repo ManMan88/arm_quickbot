@@ -74,12 +74,9 @@ class Motor(object):
         self.pineEn = pinEn
         self.pin1 = pin1
         self.pin2 = pin2
-        self.targetVelocity = 0
         self.direction = 1
         self.maxVel = maxVel #[mm/sec] -> for both directions
 	self.minVal = minVal #[mm/sec] -> for both directions
-        self.diameter = diameter
-        self.baseLength = baseLength
         PWM.start(pinEn,0)
         GPIO.setup(pin1,GPIO.OUT)
         GPIO.setup(pin2,GPIO.OUT)
