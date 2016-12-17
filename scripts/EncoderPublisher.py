@@ -3,11 +3,14 @@
 from Quickbot import Encoder
 import rospy
 from arm_quickbot.msg import EncodersMsg
+from arm_quickbot.srv import SetDirectionSrv
 import sys
 
 def publishEncoders(enLeft,enRight):
     pub = rospy.Publisher('EncodersData', EncodersMsg, queue_size=1)
     rospy.init_node('EncodersPublisher')
+    s = rospy.Service('set_left_encoder_direction', SetDirectionSrv, enLeft.reverseDirection)
+    s = rospy.Service('set_right_encoder_direction', SetDirectionSrv, enRight.reverseDirection)
     rate = rospy.Rate(20) # [Hz]
     msg = EncodersMsg()
     while not rospy.is_shutdown():
