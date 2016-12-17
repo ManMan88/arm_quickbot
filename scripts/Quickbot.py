@@ -76,8 +76,8 @@ class Motor(object):
         self.pin2 = pin2
         self.direction = 1
         self.maxVel = maxVel #[mm/sec] -> for both directions
-	self.minVal = minVal #[mm/sec] -> for both directions
-        PWM.start(pinEn,0)
+	self.minVel = minVel #[mm/sec] -> for both directions
+	PWM.start(pinEn,0)
         GPIO.setup(pin1,GPIO.OUT)
         GPIO.setup(pin2,GPIO.OUT)
         GPIO.output(pin1,GPIO.HIGH)
@@ -94,10 +94,6 @@ class Motor(object):
 
     def inputPWM(self, value):
         #the value should be between 0 and 100
-        if value < 0:
-            value = 0
-        if value > 100:
-            value = 100
         PWM.set_duty_cycle(self.pinEn,value)
 
     def terminate(self):
