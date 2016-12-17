@@ -86,7 +86,7 @@ class Motor(object):
         GPIO.output(pin1,GPIO.HIGH)
         GPIO.output(pin2,GPIO.LOW)
 
-    def _reverseDirection(self):
+    def reverseDirection(self):
         self.direction = - self.direction
         if self.direction > 0:
             GPIO.output(self.pin1,GPIO.HIGH)
@@ -95,7 +95,7 @@ class Motor(object):
             GPIO.output(self.pin1,GPIO.LOW)
             GPIO.output(self.pin2,GPIO.HIGH)
 
-    def _inputPWM(self, value):
+    def inputPWM(self, value):
         #the value should be between 0 and 100
         if value < 0:
             value = 0
