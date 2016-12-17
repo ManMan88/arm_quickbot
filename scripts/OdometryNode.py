@@ -12,7 +12,7 @@ class Odometer(Odometry):
         self.pubMsg = LocationMsg()
 
     def _publishLocation(self,encoderData):
-       self.calcLocation(encoderData.encoderRight,encoderData.encoderLeft)
+       self.calcLocation(encoderData.encoderRightCount,encoderData.encoderLeftCount)
        self.pubMsg.x = self.x
        self.pubMsg.y = self.y
        self.pubMsg.theta = self.theta
