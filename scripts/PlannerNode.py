@@ -7,13 +7,11 @@ from arm_quickbot.msg import IRsensorsMsg, TargetMsg, LocationMsg, ControlParamM
 
 class PlannerNode(Planner):
     def __init__(self):
-        super(Planner,self).__init__()
+        super(PlannerNode,self).__init__()
         self.pubControlParam = rospy.Publisher('ControlParameters', ControlParamMsg, queue_size = 1)
         rospy.init_node('PlannerNode')
         s = rospy.Service('set_state', SetStateSrv, self.states)
         self.cpMsg = ControlParamMsg()
-	self.velCmd = 0   #for some reason the class doesn't inherits these values
-	self.thetaCmd = 0
 
     def _IRsensorsSub(self,IRdata):
         self.IRdata = IRdata
