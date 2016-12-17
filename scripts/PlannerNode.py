@@ -28,8 +28,8 @@ class PlannerNode(Planner):
         rospy.Subscriber("Target", TargetMsg, self._targetSub)
         rate = rospy.Rate(10) #[Hz]
         while not rospy.is_shutdown():
-            self.cpMsg.velocity = self.velCmd
-            self.cpMsg.theta = self.thetaCmd
+            self.cpMsg.velocity = self.velDes
+            self.cpMsg.theta = self.thetaDes
             self.pubControlParam.publish(self.cpMsg)
             rospy.loginfo(self.cpMsg)
             rate.sleep()

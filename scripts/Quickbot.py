@@ -95,16 +95,7 @@ class Motor(object):
             GPIO.output(self.pin1,GPIO.LOW)
             GPIO.output(self.pin2,GPIO.HIGH)
 
-    def setTargetVelocity(self,desiredVelocity):
-        #the desiredVelocity should be between [-maxVel,maxVel]
-        desiredDirection = p.sign(desiredVelocity)
-        if abs(desiredVelocity) > maxVel:
-            desiredVelocity = maxVel*desiredDirection
-        if desiredDirection == - self.direction:
-            self._reverseDirection()
-        self.targetVelocity = desiredVelocity
-
-    def inputPWM(self, value):
+    def _inputPWM(self, value):
         #the value should be between 0 and 100
         if value < 0:
             value = 0
@@ -168,7 +159,7 @@ class Planner(object):
         return 0
 
     def _stop(self):
-	self.thetaDes = 0
+	self.thetaDes = self.thetaDes
         self.vDes = 0
 
     def _setVelocity():
