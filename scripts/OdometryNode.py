@@ -24,4 +24,7 @@ class Odometer(Odometry):
 
 if __name__ == '__main__':
     odo = Odometer()
-    odo.getEncoderDataPublishLocation()
+    try:
+        odo.getEncoderDataPublishLocation() 
+    except rospy.ROSInterruptException:
+        pass
