@@ -6,16 +6,17 @@ from math import cos, sin
 import time
 
 class IRSensors(object):
-    def __init__(self,pin,pose):
+    def __init__(self,pin,location,angle):
         #Recieves a list of angles and coresponding input ADC pins
         #Create a list of sensors
-        self.pose = pose
+        self.location = location
         self.pin = pin
+	self.angle = angle
         #how can I define voltages and distances only once and not to each instance? Global?
         #I need ro define goloba vairables in ROS -> meantime I stay like this
         self.voltages = np.array([0.357,0.42,0.519,0.654,0.731,0.813,0.927,1.061,
                                   1.267,1.397,1.562,1.763,2.017,2.335,2.72,2.994])
-        self.distances = np.array([[35,30,25,20,18,16,14,12,10,9,8,7,6,5,4,3.5]]) 
+        self.distances = np.array([35,30,25,20,18,16,14,12,10,9,8,7,6,5,4,3.5]) 
         ADC.setup()
             
     def _readRawValue(self):

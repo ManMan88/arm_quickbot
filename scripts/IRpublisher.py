@@ -3,6 +3,7 @@
 from Quickbot import IRSensors
 import rospy
 from arm_quickbot.msg import IRsensorsMsg
+import sys
 
 def publishIR(IRlist):
     pub = rospy.Publisher('IRsensorsDistance', IRsensorsMsg, queue_size=1)
@@ -10,19 +11,30 @@ def publishIR(IRlist):
     rate = rospy.Rate(5) # [Hz]
     n = len(IRlist)
     msg = IRsensorsMsg()
+    for ind in range(n):
+        msg.IRangles[ind] = IRlist[ind].angle
     while not rospy.is_shutdown():
 	for ind in range(n):
 	    msg.IRdata[ind] = IRlist[ind].irDist()
         rospy.loginfo(msg.IRdata)
-        pub.publish(msg.IRdata)
+        pub.publish(msg)
         rate.sleep()
 
 if __name__ == '__main__':
-    irLB = IRSensors("P9_35","LB")
-    irLF = IRSensors("P9_36","LF")
-    irCF = IRSensors("P9_37","CF")
-    irRF = IRSensors("P9_38","RF")
-    irRB = IRSensors("P9_39","RB")
+    if len(sys.argv) == 6:
+        pinLB = sys.argv[1]
+	pinLF = sys.argv[2]
+	pinCF = sys.argv[3]
+	pinRF = sys.argv[4]
+	pinRB = sys.argv[5]
+    else:
+        print("Wrong number of input arguments")
+        sys.exit(1)
+    irLB = IRSensors(pinLB,"LB",-90)
+    irLF = IRSensors(pinLF,"LF",-45)
+    irCF = IRSensors(pinCF,"CF",0)
+    irRF = IRSensors(pinRF,"RF",45)
+    irRB = IRSensors(pinRB,"RB",90)
     IRlist = [irLB,irLF,irCF,irRF,irRB]
     try:
         publishIR(IRlist)
