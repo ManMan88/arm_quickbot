@@ -170,8 +170,8 @@ class StateMachine(object):
         self.distanceFromTargert = 0
         self.distanceStartWall = 0
         self.location = [0,0,0]
-        self.IRdata = [0,0,0,0,0]
-        self.minIRdata = 0
+        self.IRvalues = [0,0,0,0,0]
+        self.minIRvalues = 0
         self.avoidDist = avoidDist
         self.followWallDist = followWallDist
         self.emergancyDist = emergancyDist
@@ -183,7 +183,7 @@ class StateMachine(object):
         return 0
 
     def _checkEmergency(self):
-        if self.minIRdata < self.emergancyDist:
+        if self.minIRvalues < self.emergancyDist:
             return 1
         return 0
 
@@ -193,12 +193,12 @@ class StateMachine(object):
         return 0
 
     def _checkAvoidObstacles(self):
-        if self.minIRdata < self.avoidObstaclesDist:
+        if self.minIRvalues < self.avoidObstaclesDist:
             return 1
         return 0
 
     def __checkFollowWall(self):
-        if self.minIRdata < self.followWallDist:
+        if self.minIRvalues < self.followWallDist:
             self.distanceStartWall = self.distanceFromTargert
             return 1
         return 0
@@ -211,21 +211,136 @@ class StateMachine(object):
 
     def chooseState(self):
         self.distanceFromTargert = np.linalg.norm(self.location[0:1] - self.target)
-        self.minIRdata = min(IRdata)
-        if self._checkEmergency(IRdata):
+        self.minIRvalues = min(IRvalues)
+        if self._checkEmergency(IRvalues):
             self.state = "Stop"
         elif self._checkReachedTarget(location):
             self.state = "Stop"
-        elif self._checkAvoidObstacles(IRdata):
+        elif self._checkAvoidObstacles(IRvalues):
             self.state = "AvoidObstacles"
         elif self.followWall:
             if self._checkStopFollowWall:
                 self.state = "GoToGoal"
                 self.followWall = 0
-        elif self._checkFollowWall(IRdata):
+        elif self._checkFollowWall(IRvalues):
             self.state = "FollowWall"
             self.followWall = 1
         else:
             self.state = "GoToTarget"
 
-        return self.state
+        return self.stateclass StateMachine(object):
+    def __init(self, stopError=20, emergancyDist=4, avoidObstaclesDist=10, followWallDist=22, wallBias=30, factorIR=[1,5,10,5,1], target=[0,0]):
+        self.state = "Stop"
+        self.factorIR = factorIR
+        self.stopError = stopError #[mm]
+        self.targt = target
+        self.followWall = 0
+        self.distanceFromTargert = 0
+        self.distanceStartWall = 0
+        self.location = [0,0,0]
+        self.IRvalues = [0,0,0,0,0]
+        self.minIRvalues = 0
+        self.avoidDist = avoidDist
+        self.followWallDist = followWallDist
+        self.emergancyDist = emergancyDist
+        self.wallBias = wallBias
+
+    def setTarget(self,target):
+        self.target = target
+        self.distanceFromTargert = np.linalg.norm(self.location[0:1] - self.target)
+        return 0
+
+    def _checkEmergency(self):
+        if self.minIRvalues < self.emergancyDist:
+            return 1
+        return 0
+
+    def _checkReachedTarget(self):
+        if self.distanceFromTargert < self.stopError:
+            return 1
+        return 0
+
+    def _checkAvoidObstacles(self):
+        if self.minIRvalues < self.avoidObstaclesDist:
+            return 1
+        return 0
+
+    def __checkFollowWall(self):
+        if self.minIRvalues < self.followWallDist:
+            self.distanceStartWall = self.distanceFromTargert
+            return 1
+        return 0
+
+    def _checkStopFollowWall(self):
+        if self.distanceFromTargert + self.wallBias < self.distanceStartWall:
+            return 1
+        return 0
+
+
+    def chooseState(self):
+        self.distanceFromTargert = np.linalg.norm(self.location[0:1] - self.target)
+        self.minIRvalues = min(IRvalues)
+        if self._checkEmergency(IRvalues):
+            self.state = "Stop"
+        elif self._checkReachedTarget(location):
+            self.state = "Stop"
+        elif self._checkAvoidObstacles(IRvalues):
+            self.state = "AvoidObstacles"
+        elif self.followWall:
+            if self._checkStopFollowWall:
+                self.state = "GoToGoal"
+                self.followWall = 0
+        elif self._checkFollowWall(IRvalues):
+            self.state = "FollowWall"
+            self.followWall = 1
+        else:
+            self.state = "GoToTarget"
+
+        return self.stateclass StateMachine(object):
+    def __init(self, stopError=20, emergancyDist=4, avoidObstaclesDist=10, followWallDist=22, wallBias=30, factorIR=[1,5,10,5,1], target=[0,0]):
+        self.state = "Stop"
+        self.factorIR = factorIR
+        self.stopError = stopError #[mm]
+        self.targt = target
+        self.followWall = 0
+        self.distanceFromTargert = 0
+        self.distanceStartWall = 0
+        self.location = [0,0,0]
+        self.IRvalues = [0,0,0,0,0]
+        self.minIRvalues = 0
+        self.avoidDist = avoidDist
+        self.followWallDist = followWallDist
+        self.emergancyDist = emergancyDist
+        self.wallBias = wallBias
+
+    def setTarget(self,target):
+        self.target = target
+        self.distanceFromTargert = np.linalg.norm(self.location[0:1] - self.target)
+        return 0
+
+    def _checkEmergency(self):
+        if self.minIRvalues < self.emergancyDist:
+            return 1
+        return 0
+
+    def _checkReachedTarget(self):
+        if self.distanceFromTargert < self.stopError:
+            return 1
+        return 0
+
+    def _checkAvoidObstacles(self):
+        if self.minIRvalues < self.avoidObstaclesDist:
+            return 1
+        return 0
+
+    def __checkFollowWall(self):
+        if self.minIRvalues < self.followWallDist:
+            self.distanceStartWall = self.distanceFromTargert
+            return 1
+        return 0
+
+    def _checkStopFollowWall(self):
+        if self.distanceFromTargert + self.wallBias < self.distanceStartWall:
+            return 1
+        return 0
+

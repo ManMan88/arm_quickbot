@@ -20,7 +20,7 @@ class StateMachineNode(StateMachine):
         self.stateMsg.state = self.chooseState()
 
     def _IRsensorsSub(self,IRdata):
-	self.IRdata = IRdata
+	self.IRvalues = IRdata.values
 
     def _locationSub(self,locationData):
         self.location = [locationData.x,locationData.y,locationData.theta]
