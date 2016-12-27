@@ -2,7 +2,7 @@ import Adafruit_BBIO.ADC as ADC
 import Adafruit_BBIO.GPIO as GPIO
 import Adafruit_BBIO.PWM as PWM
 import numpy as np
-from math import cos, sin
+from math import cos, sin, atan2
 import time
 
 class IRSensors(object):
@@ -116,9 +116,9 @@ class Odometry(object):
         self.theta = (rightWheelCount - leftWheelCount)*self.resolution/self.baseLength
 
 class Planner(object):
-    def __init__(self,weights=[1,4,8,4,1]):
-        self.IRvalues = [0,0,0,0,0]
-	self.IRangles = [-90,-45,0,45,90]*math.pi/180
+    def __init__(self,weights=[20,15,0.5,15,20]):
+        gvalues = [0,0,0,0,0]
+	self.IRangles = [-90,-45,0,45,90]*np.pi/180
         self.location = [0,0,0]
 	self.weights = weights
         self.state = "Stop"
@@ -140,17 +140,27 @@ class Planner(object):
             self._stop()
         return 0
 
+    def _ir2worldVec(self):
+	relAngles = self.location[2] + self.IRangles
+	relAngles = np.arctan2(np.sin(relAngles),np.cos(relAngles))
+	unitVectors = np.array([np.cos(relAngles), np.sin(relAngles)])
+	return unitVectors*self.IRvalues
+
     def _followWall(self):
         return 0
 
     def _goToTarget(self):
 	uX = self.target[0]-self.location[0]
         uY = self.target[1]-self.location[1]
-        self.thetaDes = np.arctan2(uY,uX)
+        self.thetaDes = atan2(uY,uX)
 	self.velDes = self._setVelocity()
 
     def _avoidObstacles(self):
-        return 0
+        irVectors = self._ir2worldVec()
+	avoidVector = self._ir2worldVec*self.weights
+	avoidVector = np.sum(avoidVector,axis=1)
+	self.thetaDes = atan2(avoidVector[1],avoidVector[0])
+	self.velDes = self._setVelocity()
 
     def _stop(self):
 	self.thetaDes = self.thetaDes

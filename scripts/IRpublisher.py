@@ -1,4 +1,4 @@
-[A#!/usr/bin/env python
+#!/usr/bin/env python
 # license removed for brevity
 from Quickbot import IRSensors
 import rospy
