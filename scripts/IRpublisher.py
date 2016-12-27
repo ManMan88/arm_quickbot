@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+[A#!/usr/bin/env python
 # license removed for brevity
 from Quickbot import IRSensors
 import rospy
@@ -15,8 +15,8 @@ def publishIR(IRlist):
         msg.IRangles[ind] = IRlist[ind].angle
     while not rospy.is_shutdown():
 	for ind in range(n):
-	    msg.IRdata[ind] = IRlist[ind].irDist()
-        rospy.loginfo(msg.IRdata)
+	    msg.IRvalues[ind] = IRlist[ind].irDist()
+        rospy.loginfo(msg.IRvalues)
         pub.publish(msg)
         rate.sleep()
 

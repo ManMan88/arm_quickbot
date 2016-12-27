@@ -1,2 +1,2 @@
-float64[5] IRdata
+float64[5] IRvalues
 int16[5] IRangles

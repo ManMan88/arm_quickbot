@@ -117,7 +117,8 @@ class Odometry(object):
 
 class Planner(object):
     def __init__(self,weights=[1,4,8,4,1]):
-        self.IRdata = [0,0,0,0,0]
+        self.IRvalues = [0,0,0,0,0]
+	self.IRangles = [-90,-45,0,45,90]*math.pi/180
         self.location = [0,0,0]
 	self.weights = weights
         self.state = "Stop"
