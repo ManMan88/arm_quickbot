@@ -117,7 +117,7 @@ class Odometry(object):
 
 class Planner(object):
     def __init__(self,weights=[20,15,0.5,15,20]):
-        gvalues = [0,0,0,0,0]
+        self.IRvalues = [0,0,0,0,0]
 	self.IRangles = [-90,-45,0,45,90]*np.pi/180
         self.location = [0,0,0]
 	self.weights = weights
