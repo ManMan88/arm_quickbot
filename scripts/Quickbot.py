@@ -116,7 +116,7 @@ class Odometry(object):
         self.theta = (rightWheelCount - leftWheelCount)*self.resolution/self.baseLength
 
 class Planner(object):
-    def __init__(self,weights=[20,15,0.5,15,20]):
+    def __init__(self,weights=[20,15,0.5,15,20],wallDist=20):
         self.IRvalues = [0,0,0,0,0]
 	self.IRangles = [-90,-45,0,45,90]*np.pi/180
         self.location = [0,0,0]
@@ -126,6 +126,7 @@ class Planner(object):
 	self.thetaDes = 0
         self.velDes = 0
 	self.wallSide = 'right'
+	self.wallDist = wallDist
 
     def states(self):
         if state == "Stop":
@@ -133,7 +134,10 @@ class Planner(object):
         elif state == "AvoidObstacles":
             self._avoidObstacles()
         elif state == "FollowWall":
-            self._followWall()
+            self._setFollowDirection()
+	    self._followWall()
+	elif state == "KeepFollow":
+	    self._followWall()
         elif state == "GoToGoal":
             self._goToTarget()
         else:
@@ -147,7 +151,34 @@ class Planner(object):
 	return unitVectors*self.IRvalues
 
     def _followWall(self):
-        return 0
+	if self.wallSide == "Right":
+	    sortedInd = np.argsort(np.array(self.IRvalues)[[4,3,2]])
+	    tempVal = np.array(self.IRvalues)[[4,3,2]]
+	    tempAng = np.array(self.IRangles)[[4,3,2]]
+	else:
+	    sortedInd = np.argsort(np.array(self.IRvalues)[[0,1,2]])
+	    tempVal = np.array(self.IRvalues)[[0,1,2]]
+	    tempAng = np.array(self.IRangles)[[0,1,2]]
+	if sortedInd[0] > sortedInd[1]:
+	    frontVec = np.array([cos(tempAng[0]),sin(tempAng[0])])*tempVal[0]
+	    rearVec = np.array([cos(tempAng[1]),sin(tempAng[1])])*tempVal[1]
+	else:
+	    rearVec = np.array([cos(tempAng[0]),sin(tempAng[0])])*tempVal[0]
+            frontVec = np.array([cos(tempAng[1]),sin(tempAng[1])])*tempVal[1]
+	wallVec = frontVec - rearVec
+	th = self.location[2]
+	#add perpendicular vec
+	uX =  wallVec[0]*cos(th) + wallVec[1]*sin(th)
+	uY = -wallVec[0]*sin(th) + wallVec[1]*cos(th)
+	self.thetaDes = atan2(uY,uX)
+	self.velDes = self._setVelocity()
+
+    def _setFollowDirection(self):
+	sortedInd = np.argsort(np.array(self.IRvalues)[[0,1,3,4]])
+	if sortedInd[0] == 0 or sortedInd[0] == 1:
+	    self.wallSide = "Left"
+	else:
+	    self.wallSide = "Right"
 
     def _goToTarget(self):
 	uX = self.target[0]-self.location[0]
@@ -171,7 +202,7 @@ class Planner(object):
 	return 0.5
 
 class StateMachine(object):
-    def __init(self, stopError=20, emergancyDist=4, avoidObstaclesDist=10, followWallDist=22, wallBias=30, factorIR=[1,5,10,5,1], target=[0,0]):
+    def __init(self, stopError=20, emergancyDist=4, avoidObstaclesDist=10, followWallDist=22, wallBias=10, factorIR=[1,5,10,5,1], target=[0,0]):
         self.state = "Stop"
         self.factorIR = factorIR
         self.stopError = stopError #[mm]
@@ -181,7 +212,7 @@ class StateMachine(object):
         self.distanceStartWall = 0
         self.location = [0,0,0]
         self.IRvalues = [0,0,0,0,0]
-        self.minIRvalues = 0
+        self.minIRvalue = 30
         self.avoidDist = avoidDist
         self.followWallDist = followWallDist
         self.emergancyDist = emergancyDist
@@ -193,7 +224,7 @@ class StateMachine(object):
         return 0
 
     def _checkEmergency(self):
-        if self.minIRvalues < self.emergancyDist:
+        if self.minIRvalue < self.emergancyDist:
             return 1
         return 0
 
@@ -203,39 +234,42 @@ class StateMachine(object):
         return 0
 
     def _checkAvoidObstacles(self):
-        if self.minIRvalues < self.avoidObstaclesDist:
+        if self.minIRvalue < self.avoidObstaclesDist:
             return 1
         return 0
 
     def __checkFollowWall(self):
-        if self.minIRvalues < self.followWallDist:
+        if self.minIRvalue < self.followWallDist:
             self.distanceStartWall = self.distanceFromTargert
             return 1
         return 0
 
     def _checkStopFollowWall(self):
-        if self.distanceFromTargert + self.wallBias < self.distanceStartWall:
+	#add condition
+	if self.distanceFromTargert + self.wallBias < self.distanceStartWall:
             return 1
         return 0
 
-
     def chooseState(self):
         self.distanceFromTargert = np.linalg.norm(self.location[0:1] - self.target)
-        self.minIRvalues = min(IRvalues)
-        if self._checkEmergency(IRvalues):
+        self.minIRvalue = min(self.IRvalues)
+        if self._checkEmergency():
             self.state = "Stop"
-        elif self._checkReachedTarget(location):
+        elif self._checkReachedTarget():
             self.state = "Stop"
-        elif self._checkAvoidObstacles(IRvalues):
+        elif self._checkAvoidObstacles():
             self.state = "AvoidObstacles"
-        elif self.followWall:
-            if self._checkStopFollowWall:
+        elif self.followWall():
+            if self._checkStopFollowWall():
                 self.state = "GoToGoal"
                 self.followWall = 0
-        elif self._checkFollowWall(IRvalues):
-            self.state = "FollowWall"
+	   else:
+		self.state = "KeepFollow"
+        elif self._checkFollowWall():
+            self.distanceStartWall = self.distanceFromTargert
+	    self.state = "FollowWall"
             self.followWall = 1
         else:
             self.state = "GoToTarget"
 
-        return self.stateclass
+        return self.state
