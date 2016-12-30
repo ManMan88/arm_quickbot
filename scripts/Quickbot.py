@@ -128,7 +128,7 @@ class Planner(object):
 	self.wallSide = 'right'
 	self.wallDist = wallDist
 
-    def states(self):
+    def states(self,state):
         if state == "Stop":
             self._stop()
         elif state == "AvoidObstacles":

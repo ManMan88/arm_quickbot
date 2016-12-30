@@ -53,6 +53,7 @@ find_package(catkin REQUIRED COMPONENTS
    StateMsg.msg
    TargetMsg.msg
    ControlParamMsg.msg
+   VectorsMsg.msg
  )
 
 ## Generate services in the 'srv' folder
