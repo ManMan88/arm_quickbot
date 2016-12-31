@@ -118,7 +118,7 @@ class Odometry(object):
 class Planner(object):
     def __init__(self,weights=[20,15,0.5,15,20],wallDist=20):
         self.IRvalues = [0,0,0,0,0]
-        self.IRangles = [-90,-45,0,45,90]*np.pi/180
+        self.IRangles = np.array([-90,-45,0,45,90])*np.pi/180
         self.location = [0,0,0]
         self.weights = weights
         self.state = "Stop"
@@ -129,7 +129,7 @@ class Planner(object):
         self.wallDist = wallDist
         self.targetVector = [0,0]
         self.wallVector = [0,0]
-	self.testVec = [0,0]
+	self.awayFromWallVector = [0,0]
 
     def states(self,state):
         if state == "Stop":
@@ -154,14 +154,14 @@ class Planner(object):
         return 0
 
     def _vec2target(self):
-        uX = self.target[0]-self.location[0]
-        uY = self.target[1]-self.location[1]
-        self.targetVector = [uX,uY]/np.linalg.norm(np.array([uX,uY]))
+        vec = np.array(slef.target) - np.array(slef.location[0:2])
+        self.targetVector = vec/np.linalg.norm(np.array([uX,uY]))
 
     def _goToTarget(self):
         self._vec2target()
         self.thetaDes = atan2(self.targetVector[1],self.targetVector[0])
         self.velDes = self._setVelocity()
+
     def _avoidObstacles(self):
         irVectors = self._ir2worldVec()
         avoidVector = irVectors*self.weights
@@ -170,7 +170,7 @@ class Planner(object):
         self.velDes = self._setVelocity()
         self.targetVector = avoidVector
 
-def _followWall(self):
+    def _followWall(self):
         if self.wallSide == "Right":
             sortedInd = np.argsort(np.array(self.IRvalues)[[4,3,2]])
             tempVal = np.array(self.IRvalues)[[4,3,2]]
@@ -222,21 +222,21 @@ def _followWall(self):
         return 10
 
 class StateMachine(object):
-    def __init(self, stopError=20, emergancyDist=4, avoidObstaclesDist=8, followWallDist=20, wallBias=1, target=[0,0]):
+    def __init__(self, stopError=20, emergancyDist=4, avoidObstaclesDist=8, followWallDist=20, wallBias=10):
         self.state = "Stop"
         self.stopError = stopError #[mm]
-        self.targt = target
+        self.target = [0,0]
         self.followWall = 0
         self.distanceFromTargert = 0
         self.distanceStartWall = 0
         self.location = [0,0,0]
         self.IRvalues = [0,0,0,0,0]
         self.minIRvalue = 30
-        self.avoidDist = avoidDist
+        self.avoidDist = avoidObstaclesDist
         self.followWallDist = followWallDist
         self.emergancyDist = emergancyDist
         self.wallBias = wallBias
-	self.awayFromWallvec = [0,0]
+	self.awayFromWallVec = [0,0]
 	self.targetVec = [0,0]
 
     def setTarget(self,target):
@@ -271,7 +271,7 @@ class StateMachine(object):
         return 0
 
     def chooseState(self):
-        self.distanceFromTargert = np.linalg.norm(self.location[0:1] - self.target)
+        self.distanceFromTargert = np.linalg.norm(np.array(self.location[0:2]) - np.array(self.target))
         self.minIRvalue = min(self.IRvalues)
         if self._checkEmergency():
             self.state = "Stop"
@@ -283,7 +283,7 @@ class StateMachine(object):
             if self._checkStopFollowWall():
                 self.state = "GoToGoal"
                 self.followWall = 0
-	   else:
+	    else:
 		self.state = "KeepFollow"
         elif self._checkFollowWall():
             self.distanceStartWall = self.distanceFromTargert

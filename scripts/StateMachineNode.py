@@ -3,7 +3,7 @@
 from Quickbot import StateMachine
 import rospy
 from arm_quickbot.srv import SetTargetSrv, SetStateSrv
-from arm_quickbot.msg import IRsensorsMsg, StateMsg, TargetMsg, LocationMsg
+from arm_quickbot.msg import IRsensorsMsg, StateMsg, TargetMsg, LocationMsg, VectorsMsg
 
 class StateMachineNode(StateMachine):
     def __init__(self):
@@ -15,7 +15,7 @@ class StateMachineNode(StateMachine):
 	self.targetMsg = TargetMsg()
 	self.s = rospy.Service('set_target', SetTargetSrv, self.setTarget)
 	self.stateSrv = rospy.ServiceProxy('set_state', SetStateSrv)
-    
+
     def _determineState(self):
         self.stateMsg.state = self.chooseState()
 
@@ -25,27 +25,31 @@ class StateMachineNode(StateMachine):
     def _locationSub(self,locationData):
         self.location = [locationData.x,locationData.y,locationData.theta]
 
-    def runStateMashine(self):
+    def _VectorsSub(self,vectors):
+	self.targetVec = vectors.targetVector
+	self.awayFromWallVec = vectors.awayFromWallVector
+
+    def runStateMachine(self):
 	rospy.Subscriber("Location", LocationMsg, self._locationSub)
 	rospy.Subscriber("IRsensorsDistance", IRsensorsMsg, self._IRsensorsSub)
+	rospy.Subscriber("RobotVectors", VectorsMsg, self._VectorsSub)
 	rate = rospy.Rate(10) #[Hz]
 	while not rospy.is_shutdown():
 	    self.stateMsg.state = self.chooseState()
 	    if self.stateSrv(self.state):
 		print "stateSrv error in StateMachineNode"
-		raise 
+		#raise
             self.targetMsg.target = self.target
 	    self.pubState.publish(self.stateMsg)
-	    rospy.loginfo(stateMsg)
+	    rospy.loginfo(self.stateMsg)
 	    self.pubTarget.publish(self.targetMsg)
-	    rospy.loginfo(targetMsg)
+	    rospy.loginfo(self.targetMsg)
 	    rate.sleep()
 
 if __name__ == "__main__":
-    rospy.wait_for_service('SetState', timeout = 10)
+    rospy.wait_for_service('set_state', timeout = 10)
     SM = StateMachineNode()
     try:
         SM.runStateMachine()
     except rospy.ROSInterruptException:
         pass
-
