@@ -118,93 +118,112 @@ class Odometry(object):
 class Planner(object):
     def __init__(self,weights=[20,15,0.5,15,20],wallDist=20):
         self.IRvalues = [0,0,0,0,0]
-	self.IRangles = [-90,-45,0,45,90]*np.pi/180
+        self.IRangles = [-90,-45,0,45,90]*np.pi/180
         self.location = [0,0,0]
-	self.weights = weights
+        self.weights = weights
         self.state = "Stop"
-	self.target = [0,0]
-	self.thetaDes = 0
+        self.target = [0,0]
+        self.thetaDes = 0
         self.velDes = 0
-	self.wallSide = 'right'
-	self.wallDist = wallDist
+        self.wallSide = 'right'
+        self.wallDist = wallDist
+        self.targetVector = [0,0]
+        self.wallVector = [0,0]
+	self.testVec = [0,0]
 
     def states(self,state):
         if state == "Stop":
+            self.targetVector = [0,0]
+            self.wallVector = [0,0]
             self._stop()
         elif state == "AvoidObstacles":
+            self.targetVector = [0,0]
             self._avoidObstacles()
         elif state == "FollowWall":
             self._setFollowDirection()
-	    self._followWall()
-	elif state == "KeepFollow":
-	    self._followWall()
+            self._followWall()
+        elif state == "KeepFollow":
+            self._followWall()
         elif state == "GoToGoal":
+            self.wallVector = [0,0]
             self._goToTarget()
         else:
+            self.targetVector = [0,0]
+            self.wallVector = [0,0]
             self._stop()
         return 0
 
-    def _ir2worldVec(self):
-	relAngles = self.location[2] + self.IRangles
-	relAngles = np.arctan2(np.sin(relAngles),np.cos(relAngles))
-	unitVectors = np.array([np.cos(relAngles), np.sin(relAngles)])
-	return unitVectors*self.IRvalues
-
-    def _followWall(self):
-	if self.wallSide == "Right":
-	    sortedInd = np.argsort(np.array(self.IRvalues)[[4,3,2]])
-	    tempVal = np.array(self.IRvalues)[[4,3,2]]
-	    tempAng = np.array(self.IRangles)[[4,3,2]]
-	else:
-	    sortedInd = np.argsort(np.array(self.IRvalues)[[0,1,2]])
-	    tempVal = np.array(self.IRvalues)[[0,1,2]]
-	    tempAng = np.array(self.IRangles)[[0,1,2]]
-	if sortedInd[0] > sortedInd[1]:
-	    frontVec = np.array([cos(tempAng[0]),sin(tempAng[0])])*tempVal[0]
-	    rearVec = np.array([cos(tempAng[1]),sin(tempAng[1])])*tempVal[1]
-	else:
-	    rearVec = np.array([cos(tempAng[0]),sin(tempAng[0])])*tempVal[0]
-            frontVec = np.array([cos(tempAng[1]),sin(tempAng[1])])*tempVal[1]
-	wallVec = frontVec - rearVec
-	th = self.location[2]
-	#add perpendicular vec
-	uX =  wallVec[0]*cos(th) + wallVec[1]*sin(th)
-	uY = -wallVec[0]*sin(th) + wallVec[1]*cos(th)
-	self.thetaDes = atan2(uY,uX)
-	self.velDes = self._setVelocity()
-
-    def _setFollowDirection(self):
-	sortedInd = np.argsort(np.array(self.IRvalues)[[0,1,3,4]])
-	if sortedInd[0] == 0 or sortedInd[0] == 1:
-	    self.wallSide = "Left"
-	else:
-	    self.wallSide = "Right"
+    def _vec2target(self):
+        uX = self.target[0]-self.location[0]
+        uY = self.target[1]-self.location[1]
+        self.targetVector = [uX,uY]/np.linalg.norm(np.array([uX,uY]))
 
     def _goToTarget(self):
-	uX = self.target[0]-self.location[0]
-        uY = self.target[1]-self.location[1]
-        self.thetaDes = atan2(uY,uX)
-	self.velDes = self._setVelocity()
-
+        self._vec2target()
+        self.thetaDes = atan2(self.targetVector[1],self.targetVector[0])
+        self.velDes = self._setVelocity()
     def _avoidObstacles(self):
         irVectors = self._ir2worldVec()
-	avoidVector = self._ir2worldVec*self.weights
-	avoidVector = np.sum(avoidVector,axis=1)
-	self.thetaDes = atan2(avoidVector[1],avoidVector[0])
-	self.velDes = self._setVelocity()
+        avoidVector = irVectors*self.weights
+        avoidVector = np.sum(avoidVector,axis=1)
+        self.thetaDes = atan2(avoidVector[1],avoidVector[0])
+        self.velDes = self._setVelocity()
+        self.targetVector = avoidVector
+
+def _followWall(self):
+        if self.wallSide == "Right":
+            sortedInd = np.argsort(np.array(self.IRvalues)[[4,3,2]])
+            tempVal = np.array(self.IRvalues)[[4,3,2]]
+            tempAng = np.array(self.IRangles)[[4,3,2]]
+        else:
+            sortedInd = np.argsort(np.array(self.IRvalues)[[0,1,2]])
+            tempVal = np.array(self.IRvalues)[[0,1,2]]
+            tempAng = np.array(self.IRangles)[[0,1,2]]
+        if sortedInd[0] > sortedInd[1]:
+            frontVec = np.array([cos(tempAng[0]),sin(tempAng[0])])*tempVal[0]
+            rearVec = np.array([cos(tempAng[1]),sin(tempAng[1])])*tempVal[1]
+        else:
+            rearVec = np.array([cos(tempAng[0]),sin(tempAng[0])])*tempVal[0]
+            frontVec = np.array([cos(tempAng[1]),sin(tempAng[1])])*tempVal[1]
+        wallParallelVec = (frontVec - rearVec)/np.linalg.norm((frontVec - rearVec))
+        wallPerpendicularVec = rearVec - np.dot(rearVec,wallParallelVec)*wallParallelVec
+        wallPerpErrVec = wallPerpendicularVec - self.wallDist*wallPerpendicularVec/np.linalg.norm(wallPerpendicularVec)
+        wallVec = wallPerpErrVec + self.wallDist*wallParallelVec/2  #Linear combination of the 2 vectors, could be with different coeeficients
+	self.testVec = -wallPerpendicularVec
+
+        th = self.location[2]
+        uX =  wallVec[0]*cos(th) + wallVec[1]*sin(th)
+        uY = -wallVec[0]*sin(th) + wallVec[1]*cos(th)
+        self.wallVector = [uX,uY]/np.linalg.norm(np.array([uX,uY]))
+        self._vec2target()
+
+        self.thetaDes = atan2(uY,uX)
+        self.velDes = self._setVelocity()
+
+    def _setFollowDirection(self):
+        sortedInd = np.argsort(np.array(self.IRvalues)[[0,1,3,4]])
+        if sortedInd[0] == 0 or sortedInd[0] == 1:
+            self.wallSide = "Left"
+        else:
+            self.wallSide = "Right"
+
+    def _ir2worldVec(self):
+        relAngles = self.location[2] + self.IRangles
+        relAngles = np.arctan2(np.sin(relAngles),np.cos(relAngles))
+        unitVectors = np.array([np.cos(relAngles), np.sin(relAngles)])
+        return unitVectors*self.IRvalues
 
     def _stop(self):
-	self.thetaDes = self.thetaDes
+        self.thetaDes = self.thetaDes
         self.vDes = 0
 
     def _setVelocity():
-	#need to add some function of IR and target distance
-	return 0.5
+        #need to add some function of IR and target distance
+        return 10
 
 class StateMachine(object):
-    def __init(self, stopError=20, emergancyDist=4, avoidObstaclesDist=10, followWallDist=22, wallBias=10, factorIR=[1,5,10,5,1], target=[0,0]):
+    def __init(self, stopError=20, emergancyDist=4, avoidObstaclesDist=8, followWallDist=20, wallBias=1, target=[0,0]):
         self.state = "Stop"
-        self.factorIR = factorIR
         self.stopError = stopError #[mm]
         self.targt = target
         self.followWall = 0
@@ -217,6 +236,8 @@ class StateMachine(object):
         self.followWallDist = followWallDist
         self.emergancyDist = emergancyDist
         self.wallBias = wallBias
+	self.awayFromWallvec = [0,0]
+	self.targetVec = [0,0]
 
     def setTarget(self,target):
         self.target = target
@@ -245,8 +266,7 @@ class StateMachine(object):
         return 0
 
     def _checkStopFollowWall(self):
-	#add condition
-	if self.distanceFromTargert + self.wallBias < self.distanceStartWall:
+	if (self.distanceFromTargert + self.wallBias < self.distanceStartWall) and (np.dot(self.awayFromWallvec,self.targetVec) > 0):
             return 1
         return 0
 
