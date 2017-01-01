@@ -1,0 +1,33 @@
+<launch>
+  <node name="Planner" pkg="arm_quickbot" type="PlannerNode.py" />
+
+  <node name="StateMashine"  pkg="arm_quickbot" type="StateMachineNode.py" />
+
+  <node name="Encoders" pkg="EncoderPublisher" type="EncoderPublisher.py" args="P9_13 P9_14" />
+
+  <node name="IRsensors"  pkg="arm_quickbot" type="IRpublisher.py" arg="P8_1 P8_2 P8_3 P8_4 P8_5"/>
+
+  <node name="Odometry" pkg="arm_quickbot" type="OdometryNode.py" />
+
+  <node name="Motors"  pkg="arm_quickbot" type="MotorsNode.py" args="P8_34 P8_35 P8_36 P8_37 P8_38" />
+
+
+  <node name="left_wheel_pid" pkg="pid" type="controller">
+    <remap from="/state" to="/encoder" />
+    <remap from="/setpoint" to="/setVel" />
+    <remap from="/control_effort" to="/motorInput" />
+    <remap from="/pid_enable" to="/left_motor_pid_enable" />
+    <param name="Kp" value="5.0" />
+    <param name="Ki" value="0.1" />
+    <param name="Kd" value="0.1" />
+    <param name="upper_limit" value="100" />
+    <param name="lower_limit" value="0" />
+    <param name="windup_limit" value="100" />
+    <param name="cutoff_frequency" value="25" />
+    <param name="diagnostic_period" value="1.0" />
+    <param name="max_loop_frequency" value="105.0" />
+    <param name="min_loop_frequency" value="95.0" />
+  </node>
+
+</launch>
+
