@@ -3,13 +3,13 @@
 
   <node name="StateMashine"  pkg="arm_quickbot" type="StateMachineNode.py" />
 
-  <node name="Encoders" pkg="EncoderPublisher" type="EncoderPublisher.py" args="P9_13 P9_14" />
+  <node name="Encoders" pkg="EncoderPublisher" type="EncoderPublisher.py" args="P9_39 P9_37" />
 
-  <node name="IRsensors"  pkg="arm_quickbot" type="IRpublisher.py" arg="P8_1 P8_2 P8_3 P8_4 P8_5"/>
+  <node name="IRsensors"  pkg="arm_quickbot" type="IRpublisher.py" arg="P9_40 P9_38 P9_36 P9_35 P9_33" />
 
   <node name="Odometry" pkg="arm_quickbot" type="OdometryNode.py" />
 
-  <node name="Motors"  pkg="arm_quickbot" type="MotorsNode.py" args="P8_34 P8_35 P8_36 P8_37 P8_38" />
+  <node name="Motors"  pkg="arm_quickbot" type="MotorsNode.py" args="P9_14 P8_10 P8_12 P9_16 P8_16 P8_14" />
 
 
   <node name="left_wheel_pid" pkg="pid" type="controller">
