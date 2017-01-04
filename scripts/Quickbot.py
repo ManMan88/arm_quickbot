@@ -39,7 +39,7 @@ class Encoder(object):
         self.count = 0
         self.velocity = 0
         self.dt = 1
-        GPIO.setup(pin, GPIO.IN)
+        GPIO.setup(self.pin, GPIO.IN)
 
     def _callbackCount(self):
         self.timeNew = time.clock()

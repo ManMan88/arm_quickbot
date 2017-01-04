@@ -33,7 +33,7 @@ class MotorsNode(object):
         self.velCmd = parameters.velocity
 
     def _omegaParam(self,param):
-        self.omega.des = param.data
+        self.omegaCmd = param.data
 
     def _uni2diff(self):
         # [velCmd] = [mm/sec],  [omegaCmd] = [rad/sec] , [velL] = [velR] = [rad/sec}
@@ -83,8 +83,8 @@ class MotorsNode(object):
     def runMotors(self):
         rospy.Subscriber("ControlParameters", ControlParamMsg, self._controlParam)
         rospy.Subscriber("OmegaEffort", Float64, self._omegaParam)
-        rospy.Subscriber("leftMotorInput", Float64, self._setLeftMotor)
-        rospy.Subscriber("rightMotorInput", Float64, self._setRightMotor)
+        rospy.Subscriber("LeftMotorInput", Float64, self._setLeftMotor)
+        rospy.Subscriber("RightMotorInput", Float64, self._setRightMotor)
         rate = rospy.Rate(40) #[Hz]
         while not rospy.is_shutdown():
             self._uni2diff()
